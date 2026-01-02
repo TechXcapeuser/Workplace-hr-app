@@ -7,6 +7,8 @@ import LoginScreenDark from './screens/LoginScreenDark';
 import AttendanceScreen from './screens/AttendanceScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import DashboardScreen from  './screens/DashboardScreen';
+import LeaveScreen from "./screens/LeaveScreen";
+import Holidays from "./screens/Holidays";
 import { StatusBar } from "expo-status-bar";
 const Stack = createNativeStackNavigator();
 
@@ -24,7 +26,9 @@ export default function App() {
 
         {/* APP AFTER LOGIN */}
         <Stack.Screen name="MainTabs" component={BottomTabs} />
-        {/* <Stack.Screen name="AttendanceScreen" component={AttendanceScreen} /> */}
+        <Stack.Screen name="Leave" component={LeaveScreen} />
+        <Stack.Screen name="AttendanceScreen" component={AttendanceScreen} />
+        <Stack.Screen name="Holidays" component={Holidays} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1304,6 +1304,13 @@
   dependencies:
     merge-options "^3.0.4"
 
+"@react-native-community/datetimepicker@^8.5.1":
+  version "8.5.1"
+  resolved "https://registry.npmjs.org/@react-native-community/datetimepicker/-/datetimepicker-8.5.1.tgz"
+  integrity sha512-TuwM1ORbxCjOp1GOtONj0QnpDpVfq0F4UlfKZYPxL/vmriaLHt2Kgvw63Bv0Bpep4eOkslVVSS1IRfRI6d392g==
+  dependencies:
+    invariant "^2.2.4"
+
 "@react-native/assets-registry@0.81.5":
   version "0.81.5"
   resolved "https://registry.npmjs.org/@react-native/assets-registry/-/assets-registry-0.81.5.tgz"
@@ -2553,7 +2560,7 @@ expo-status-bar@~3.0.9:
   dependencies:
     react-native-is-edge-to-edge "^1.2.1"
 
-expo@*, expo@~54.0.29:
+expo@*, expo@>=52.0.0, expo@~54.0.29:
   version "54.0.29"
   resolved "https://registry.npmjs.org/expo/-/expo-54.0.29.tgz"
   integrity sha512-9C90gyOzV83y2S3XzCbRDCuKYNaiyCzuP9ketv46acHCEZn+QTamPK/DobdghoSiofCmlfoaiD6/SzfxDiHMnw==
@@ -4226,7 +4233,7 @@ react-native-is-edge-to-edge@^1.2.1, react-native-is-edge-to-edge@1.2.1:
   resolved "https://registry.npmjs.org/react-native-is-edge-to-edge/-/react-native-is-edge-to-edge-1.2.1.tgz"
   integrity sha512-FLbPWl/MyYQWz+KwqOZsSyj2JmLKglHatd3xLZWskXOpRaio4LfEDEz8E/A6uD8QoTHW6Aobw1jbEwK7KMgR7Q==
 
-"react-native-reanimated@>=3.16.0 || >=4.0.0-":
+react-native-reanimated@^4.2.1, "react-native-reanimated@>=3.16.0 || >=4.0.0-":
   version "4.2.1"
   resolved "https://registry.npmjs.org/react-native-reanimated/-/react-native-reanimated-4.2.1.tgz"
   integrity sha512-/NcHnZMyOvsD/wYXug/YqSKw90P9edN0kEPL5lP4PFf1aQ4F1V7MKe/E0tvfkXKIajy3Qocp5EiEnlcrK/+BZg==

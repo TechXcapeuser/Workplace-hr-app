@@ -7,6 +7,7 @@ import DashboardScreen from "../screens/DashboardScreen";
 import AttendanceScreen from "../screens/AttendanceScreen";
 import MoreScreen from "../screens/MoreScreen";
 import Holidays from "../screens/Holidays";
+import LeaveScreen from "../screens/LeaveScreen";
  
 
 const Tab = createBottomTabNavigator();
@@ -34,7 +35,7 @@ export default function BottomTabs() {
           if (route.name === "Home") iconName = "home-outline";
           if (route.name === "Dashboard") iconName = "grid-outline";
           if (route.name === "Logout") iconName = "log-out-outline";
-
+          if (route.name === "Leave") iconName = "calendar-outline";
 
           return <Ionicons name={iconName} size={22} color={color} />;
         },
@@ -44,10 +45,11 @@ export default function BottomTabs() {
         },
       })}
     >
-      <Tab.Screen name="Home" initialParams={{ token, user }}  component={DashboardScreen} />
-      <Tab.Screen name="Dashboard" initialParams={{ token, user }}  component={DashboardScreen} />
-      <Tab.Screen name="AttendanceScreen" initialParams={{ token, user }}  component={AttendanceScreen} />
-      <Tab.Screen name="Holidays" initialParams={{ token, user }}  component={Holidays} />
+      <Tab.Screen name="Home" initialParams={{ token, user }}  component={DashboardScreen}  />
+      <Tab.Screen name="Dashboard" initialParams={{ token, user }}  component={DashboardScreen} options={{ tabBarButton: () => null, }} />
+      <Tab.Screen name="AttendanceScreen" initialParams={{ token, user }}  component={AttendanceScreen} options={{ tabBarButton: () => null, }} />
+      <Tab.Screen name="Holidays" initialParams={{ token, user }}  component={Holidays} options={{ tabBarButton: () => null, }} />
+      <Tab.Screen name="Leave" initialParams={{ token, user }}  component={LeaveScreen} options={{ tabBarButton: () => null, }} />
       <Tab.Screen name="More" component={MoreScreen} />
     </Tab.Navigator>
   );

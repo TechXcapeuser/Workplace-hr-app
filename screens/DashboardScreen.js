@@ -208,6 +208,7 @@ export default function DashboardScreen() {
 
         <View style={styles.grid}>
           {overviewButtons.map((item, index) => (
+           // console.log(item.title),
             <TouchableOpacity
               key={index}
               style={styles.card}
@@ -215,6 +216,7 @@ export default function DashboardScreen() {
               onPress={() => {
                 if (item.title === "Attendance") {navigation.navigate("AttendanceScreen", {token,user});}
                 if (item.title === "Holidays") {navigation.navigate("Holidays", {token,user});}
+                if (item.title === "Leave") {navigation.navigate("Leave", {token,user});}
               }}
             >
               <MaterialCommunityIcons
