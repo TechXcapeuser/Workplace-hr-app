@@ -67,8 +67,11 @@ const LeaveScreen = () => {
         },
       });
 
+      console.log('Leave types API response:', response.data); // Debug log
+      
       if (response.data.status) {
         setLeaveTypes(response.data.data);
+        console.log('First leave type object:', response.data.data[0]); // Debug log structure
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to fetch leave types');
@@ -79,7 +82,7 @@ const LeaveScreen = () => {
   // Fetch leave requests
   const fetchLeaveRequests = async () => {
     try {
-      const response = await axios.get(API('/leave-requests/employee-leave-requests?year=2025'), {
+      const response = await axios.get(API('/leave-requests/employee-leave-requests'), {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -117,6 +120,7 @@ const LeaveScreen = () => {
 
   // Handle leave card press
   const handleLeaveCardPress = (leaveType) => {
+    console.log('Leave type details:', leaveType); // Debug log
     Alert.alert(
       leaveType.leave_type_name,
       `Allocated: ${leaveType.total_leave_allocated}\nTaken: ${leaveType.leave_taken}\nRemaining: ${leaveType.total_leave_allocated - leaveType.leave_taken}`
@@ -184,7 +188,7 @@ const LeaveScreen = () => {
     setTimeReason('');
   };
 
-  // Handle regular leave request - UPDATED FOR NEW API
+  // Handle regular leave request - FIXED
   const handleRequestLeave = async () => {
     if (!selectedLeaveType) {
       Alert.alert('Error', 'Please select a leave type');
@@ -197,9 +201,23 @@ const LeaveScreen = () => {
     }
 
     try {
+      // Debug: Log the selected leave type structure
+      console.log('Selected leave type object:', selectedLeaveType);
+      
+      // Get leave type ID - check for different possible property names
+      let leaveTypeId = selectedLeaveType.leave_type_id || 
+                       selectedLeaveType.id;
+      
+      console.log('Extracted leave type ID:', leaveTypeId);
+      
+      if (!leaveTypeId) {
+        Alert.alert('Error', 'Could not find leave type ID. Please select a valid leave type.');
+        return;
+      }
+
       // Prepare data according to the API specification
       const leaveData = {
-        leave_type_id: selectedLeaveType.id,
+        leave_type_id: leaveTypeId,
         leave_from: startDate.toISOString().split('T')[0], // Format: YYYY-MM-DD
         leave_to: endDate.toISOString().split('T')[0], // Format: YYYY-MM-DD
         reasons: reason.trim(), // Note: field name is "reasons" not "leave_reason"
@@ -417,22 +435,25 @@ const LeaveScreen = () => {
 
         {/* Leave Cards */}
         <View style={styles.grid}>
-          {leaveTypes.map((type, index) => (
-            <TouchableOpacity 
-              key={generateUniqueKey(type, index, 'leaveType')}
-              style={styles.leaveCard}
-              onPress={() => handleLeaveCardPress(type)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.cardTitle}>{type.leave_type_name}</Text>
-              <Text style={styles.cardValue}>
-                {type.leave_taken || 0}/{type.total_leave_allocated || 0}
-              </Text>
-              {type.leave_type_name === "Time Leave" && (
-                <Text style={styles.timeLeaveText}>Time based</Text>
-              )}
-            </TouchableOpacity>
-          ))}
+          {leaveTypes.map((type, index) => {
+            console.log('Leave type in card:', type); // Debug log
+            return (
+              <TouchableOpacity 
+                key={generateUniqueKey(type, index, 'leaveType')}
+                style={styles.leaveCard}
+                onPress={() => handleLeaveCardPress(type)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cardTitle}>{type.leave_type_name}</Text>
+                <Text style={styles.cardValue}>
+                  {type.leave_taken || 0}/{type.total_leave_allocated || 0}
+                </Text>
+                {type.leave_type_name === "Time Leave" && (
+                  <Text style={styles.timeLeaveText}>Time based</Text>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Buttons */}
@@ -542,6 +563,7 @@ const LeaveScreen = () => {
                           key={type.id || `leave-type-${index}`}
                           style={styles.dropdownItem}
                           onPress={() => {
+                            console.log('Selected leave type:', type); // Debug log
                             setSelectedLeaveType(type);
                             setLeaveTypeDropdownOpen(false);
                           }}
