@@ -9,6 +9,7 @@ import RegisterScreen from './screens/RegisterScreen';
 import DashboardScreen from  './screens/DashboardScreen';
 import LeaveScreen from "./screens/LeaveScreen";
 import Holidays from "./screens/Holidays";
+import PaySlip from "./screens/PaySlip";
 import { StatusBar } from "expo-status-bar";
 const Stack = createNativeStackNavigator();
 
@@ -29,6 +30,7 @@ export default function App() {
         <Stack.Screen name="Leave" component={LeaveScreen} />
         <Stack.Screen name="AttendanceScreen" component={AttendanceScreen} />
         <Stack.Screen name="Holidays" component={Holidays} />
+        <Stack.Screen name="PaySlip" component={PaySlip} />
       </Stack.Navigator>
     </NavigationContainer>
   );

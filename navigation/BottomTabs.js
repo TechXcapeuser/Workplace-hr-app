@@ -8,7 +8,7 @@ import AttendanceScreen from "../screens/AttendanceScreen";
 import MoreScreen from "../screens/MoreScreen";
 import Holidays from "../screens/Holidays";
 import LeaveScreen from "../screens/LeaveScreen";
- 
+ import PaySlip from "../screens/PaySlip";
 
 const Tab = createBottomTabNavigator();
 
@@ -50,6 +50,7 @@ export default function BottomTabs() {
       <Tab.Screen name="AttendanceScreen" initialParams={{ token, user }}  component={AttendanceScreen} options={{ tabBarButton: () => null, }} />
       <Tab.Screen name="Holidays" initialParams={{ token, user }}  component={Holidays} options={{ tabBarButton: () => null, }} />
       <Tab.Screen name="Leave" initialParams={{ token, user }}  component={LeaveScreen} options={{ tabBarButton: () => null, }} />
+      <Tab.Screen name="PaySlip" initialParams={{ token, user }}  component={PaySlip} options={{ tabBarButton: () => null, }} />
       <Tab.Screen name="More" component={MoreScreen} />
     </Tab.Navigator>
   );

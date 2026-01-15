@@ -22,6 +22,7 @@ import axios from 'axios';
 import { API } from '../utils/api';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import CustomHeader from "./components/CustomHeader"; // Import the header
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -67,15 +68,15 @@ const LeaveScreen = () => {
         },
       });
 
-      console.log('Leave types API response:', response.data); // Debug log
+     // // console.log('Leave types API response:', response.data); // Debug log
       
       if (response.data.status) {
         setLeaveTypes(response.data.data);
-        console.log('First leave type object:', response.data.data[0]); // Debug log structure
+     //   // console.log('First leave type object:', response.data.data[0]); // Debug log structure
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to fetch leave types');
-      console.error('Leave types error:', error);
+    //  // console.error('Leave types error:', error);
     }
   };
 
@@ -93,7 +94,7 @@ const LeaveScreen = () => {
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to fetch leave requests');
-      console.error('Leave requests error:', error);
+      //// console.error('Leave requests error:', error);
     }
   };
 
@@ -120,7 +121,7 @@ const LeaveScreen = () => {
 
   // Handle leave card press
   const handleLeaveCardPress = (leaveType) => {
-    console.log('Leave type details:', leaveType); // Debug log
+   // // console.log('Leave type details:', leaveType); // Debug log
     Alert.alert(
       leaveType.leave_type_name,
       `Allocated: ${leaveType.total_leave_allocated}\nTaken: ${leaveType.leave_taken}\nRemaining: ${leaveType.total_leave_allocated - leaveType.leave_taken}`
@@ -202,13 +203,13 @@ const LeaveScreen = () => {
 
     try {
       // Debug: Log the selected leave type structure
-      console.log('Selected leave type object:', selectedLeaveType);
+     // // console.log('Selected leave type object:', selectedLeaveType);
       
       // Get leave type ID - check for different possible property names
       let leaveTypeId = selectedLeaveType.leave_type_id || 
                        selectedLeaveType.id;
       
-      console.log('Extracted leave type ID:', leaveTypeId);
+    //  // console.log('Extracted leave type ID:', leaveTypeId);
       
       if (!leaveTypeId) {
         Alert.alert('Error', 'Could not find leave type ID. Please select a valid leave type.');
@@ -225,7 +226,7 @@ const LeaveScreen = () => {
         title: selectedLeaveType.leave_type_name // Using leave type name as title
       };
 
-      console.log('Sending leave request data:', leaveData);
+    //  // console.log('Sending leave request data:', leaveData);
 
       const response = await axios.post(API('/leave-requests/store'), leaveData, {
         headers: {
@@ -234,7 +235,7 @@ const LeaveScreen = () => {
         },
       });
 
-      console.log('API Response:', response.data);
+     // // console.log('API Response:', response.data);
 
       if (response.data.status === true || response.data.success === true) {
         Alert.alert('Success', response.data.message || 'Leave request submitted successfully');
@@ -249,13 +250,13 @@ const LeaveScreen = () => {
         );
       }
     } catch (error) {
-      console.error('Submit leave error:', error);
+    //  // console.error('Submit leave error:', error);
       
       // More detailed error handling
       if (error.response) {
         // Server responded with error status
-        console.error('Error response data:', error.response.data);
-        console.error('Error status:', error.response.status);
+      //  // console.error('Error response data:', error.response.data);
+      //  // console.error('Error status:', error.response.status);
         
         Alert.alert(
           'Error', 
@@ -273,48 +274,156 @@ const LeaveScreen = () => {
     }
   };
 
-  // Handle time leave request
-  const handleRequestTimeLeave = async () => {
-    if (!timeReason.trim()) {
-      Alert.alert('Error', 'Please enter a reason');
-      return;
+
+
+
+
+
+
+
+  // Handle time leave request - UPDATED WITH BETTER ERROR HANDLING
+const handleRequestTimeLeave = async () => {
+  if (!timeReason.trim()) {
+    Alert.alert('Error', 'Please enter a reason');
+    return;
+  }
+
+  // Check if end time is after start time
+  if (endTime <= startTime) {
+    Alert.alert('Error', 'End time must be after start time');
+    return;
+  }
+
+  try {
+    // Helper function for time formatting
+    const formatTimeForAPI = (date) => {
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    };
+
+    // Format date as YYYY-MM-DD (make sure it's in local time, not UTC)
+    const formatDateForAPI = (date) => {
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    // Prepare data according to the API specification
+    const timeLeaveData = {
+      issue_date: formatDateForAPI(timeLeaveDate), // Use local date format
+      leave_from: formatTimeForAPI(startTime),     // HH:MM
+      leave_to: formatTimeForAPI(endTime),         // HH:MM
+      reasons: timeReason.trim(),
+    };
+
+    // console.log('Sending time leave request data:', JSON.stringify(timeLeaveData, null, 2));
+    // console.log('Full endpoint URL:', API('/time-leave-requests/store'));
+
+    const response = await axios.post(API('/time-leave-requests/store'), timeLeaveData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      timeout: 10000, // 10 second timeout
+    });
+
+    // console.log('API Response:', JSON.stringify(response.data, null, 2));
+
+    if (response.data.status === true || response.data.success === true) {
+      Alert.alert('Success', response.data.message || 'Time leave request submitted successfully');
+      handleCloseTimeModal();
+      
+      // Refresh data after successful submission
+      setTimeout(() => {
+        loadData();
+      }, 500);
+      
+    } else {
+      Alert.alert(
+        'Error', 
+        response.data.message || 
+        response.data.error || 
+        'Failed to submit time leave request'
+      );
     }
-
-    // Check if end time is after start time
-    if (endTime <= startTime) {
-      Alert.alert('Error', 'End time must be after start time');
-      return;
-    }
-
-    try {
-      const timeLeaveData = {
-        leave_type_id: leaveTypes.find(type => type.leave_type_name === "Time Leave")?.id,
-        leave_date: timeLeaveDate.toISOString().split('T')[0],
-        start_time: startTime.toTimeString().split(' ')[0],
-        end_time: endTime.toTimeString().split(' ')[0],
-        leave_reason: timeReason,
-        is_time_leave: true,
-      };
-
-      const response = await axios.post(API('/time-leave-requests'), timeLeaveData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.data.status) {
-        Alert.alert('Success', 'Time leave request submitted successfully');
-        handleCloseTimeModal();
-        loadData(); // Refresh leave requests
-      } else {
-        Alert.alert('Error', response.data.message || 'Failed to submit time leave request');
+  } catch (error) {
+    // console.error('Submit time leave error:', error);
+    // console.error('Error config:', error.config);
+    
+    // More detailed error handling
+    if (error.response) {
+      // Server responded with error status
+      // console.error('Error response data:', JSON.stringify(error.response.data, null, 2));
+      // console.error('Error status:', error.response.status);
+      
+      let errorMessage = 'Failed to submit time leave request';
+      let errorDetails = '';
+      
+      // Handle 400 Bad Request specifically
+      if (error.response.status === 400) {
+        if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+          
+          // Check for specific error messages from backend
+          if (error.response.data.message.includes('leave_start_time_error')) {
+            errorMessage = 'Leave start time must be within your shift hours';
+          } else if (error.response.data.message.includes('leave_end_time_error')) {
+            errorMessage = 'Leave end time must be within your shift hours';
+          } else if (error.response.data.message.includes('leave_pending_error')) {
+            errorMessage = 'You already have a pending leave request for this date';
+          }
+        }
+        
+        // Check for validation errors
+        if (error.response.data?.errors) {
+          errorDetails = Object.values(error.response.data.errors).flat().join('\n');
+        }
+      } else if (error.response.status === 422) {
+        errorMessage = 'Validation error. Please check your input.';
+        if (error.response.data?.errors) {
+          errorDetails = Object.values(error.response.data.errors).flat().join('\n');
+        }
+      } else if (error.response.status === 401) {
+        errorMessage = 'Authentication failed. Please login again.';
+      } else if (error.response.status === 403) {
+        errorMessage = 'You do not have permission to perform this action.';
+      } else if (error.response.status === 404) {
+        errorMessage = 'API endpoint not found.';
       }
-    } catch (error) {
-      console.error('Submit time leave error:', error);
-      Alert.alert('Error', 'Failed to submit time leave request');
+      
+      // Show detailed error message
+      if (errorDetails) {
+        Alert.alert('Error', `${errorMessage}\n\n${errorDetails}`);
+      } else {
+        Alert.alert('Error', errorMessage);
+      }
+      
+    } else if (error.request) {
+      // Request was made but no response
+      // console.error('Error request:', error.request);
+      Alert.alert('Error', 'No response from server. Please check your connection.');
+    } else {
+      // Something else happened
+      Alert.alert('Error', error.message || 'Failed to submit time leave request');
     }
-  };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // Handle date change for regular leave
   const onStartDateChange = (event, selectedDate) => {
@@ -381,6 +490,13 @@ const LeaveScreen = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
+  // Format time for display in modal
+  const formatTimeForDisplay = (date) => {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
   if (loading && !refreshing) {
     return (
       <SafeAreaView style={[styles.container, styles.centered]}>
@@ -392,6 +508,7 @@ const LeaveScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+       <CustomHeader user={user} />
       <StatusBar barStyle="light-content" backgroundColor="#0b1c3d" />
       <ScrollView 
         style={styles.container} 
@@ -406,37 +523,14 @@ const LeaveScreen = () => {
         }
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Header with Back Button */}
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          
-          <View style={styles.profileRow}>
-            <Image
-              source={{ uri: user?.avatar || 'https://via.placeholder.com/60' }}
-              style={styles.avatar}
-            />
-            <View style={styles.profileInfo}>
-              <Text style={styles.hello}>Hello There</Text>
-              <Text style={styles.name}>{user?.name || 'User'}</Text>
-              <Text style={styles.email}>{user?.email}</Text>
-            </View>
-          </View>
-          <TouchableOpacity style={styles.notificationButton}>
-            <Ionicons name="notifications-outline" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
+
 
         <Text style={styles.sectionTitle}>Leave Balance</Text>
 
         {/* Leave Cards */}
         <View style={styles.grid}>
           {leaveTypes.map((type, index) => {
-            console.log('Leave type in card:', type); // Debug log
+          //  // console.log('Leave type in card:', type); // Debug log
             return (
               <TouchableOpacity 
                 key={generateUniqueKey(type, index, 'leaveType')}
@@ -563,7 +657,7 @@ const LeaveScreen = () => {
                           key={type.id || `leave-type-${index}`}
                           style={styles.dropdownItem}
                           onPress={() => {
-                            console.log('Selected leave type:', type); // Debug log
+                           // // console.log('Selected leave type:', type); // Debug log
                             setSelectedLeaveType(type);
                             setLeaveTypeDropdownOpen(false);
                           }}
@@ -717,7 +811,7 @@ const LeaveScreen = () => {
                 >
                   <Ionicons name="time-outline" size={16} color="#1E90FF" />
                   <Text style={styles.dateText} numberOfLines={1} ellipsizeMode="tail">
-                    {formatTime(startTime)}
+                    {formatTimeForDisplay(startTime)}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -731,7 +825,7 @@ const LeaveScreen = () => {
                 >
                   <Ionicons name="time-outline" size={16} color="#1E90FF" />
                   <Text style={styles.dateText} numberOfLines={1} ellipsizeMode="tail">
-                    {formatTime(endTime)}
+                    {formatTimeForDisplay(endTime)}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -756,7 +850,7 @@ const LeaveScreen = () => {
                 style={styles.submitButton}
                 onPress={handleRequestTimeLeave}
               >
-                <Text style={styles.submitButtonText}>Request Leave</Text>
+                <Text style={styles.submitButtonText}>Request Time Leave</Text>
               </TouchableOpacity>
             </ScrollView>
           </Animated.View>
@@ -781,6 +875,7 @@ const LeaveScreen = () => {
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={onStartTimeChange}
             themeVariant="dark"
+            is24Hour={true}
           />
         )}
 
@@ -791,6 +886,7 @@ const LeaveScreen = () => {
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={onEndTimeChange}
             themeVariant="dark"
+            is24Hour={true}
           />
         )}
       </Modal>

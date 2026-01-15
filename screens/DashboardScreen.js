@@ -17,6 +17,7 @@ import { useRoute, useNavigation, useFocusEffect } from "@react-navigation/nativ
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import CheckInOutPopup from "./CheckInOutPopup";
+import CustomHeader from "./components/CustomHeader";
 
 const { width } = Dimensions.get("window");
 
@@ -30,6 +31,13 @@ export default function DashboardScreen() {
   const [progress, setProgress] = useState(0);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
+  
+  // Multiple ripple animations
+  const ripple1 = useRef(new Animated.Value(0)).current;
+  const ripple2 = useRef(new Animated.Value(0)).current;
+  const ripple3 = useRef(new Animated.Value(0)).current;
+  const ripple4 = useRef(new Animated.Value(0)).current;
+  
   const progressBarWidth = progressAnim.interpolate({
     inputRange: [0, 100],
     outputRange: ["0%", "100%"],
@@ -41,7 +49,7 @@ export default function DashboardScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  /* FINGERPRINT ANIMATION */
+  /* FINGERPRINT SCALE ANIMATION */
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
@@ -59,6 +67,83 @@ export default function DashboardScreen() {
     ).start();
   }, []);
 
+  /* MULTIPLE RIPPLE ANIMATIONS */
+  useEffect(() => {
+    // First ripple
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(ripple1, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }),
+        Animated.timing(ripple1, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Second ripple (starts after delay)
+    setTimeout(() => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(ripple2, {
+            toValue: 1,
+            duration: 2000,
+            useNativeDriver: true,
+            easing: Easing.out(Easing.ease),
+          }),
+          Animated.timing(ripple2, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }, 1500);
+
+    // Third ripple (starts after delay)
+    setTimeout(() => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(ripple3, {
+            toValue: 1,
+            duration: 2000,
+            useNativeDriver: true,
+            easing: Easing.out(Easing.ease),
+          }),
+          Animated.timing(ripple3, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }, 1000);
+
+    // Fourth ripple (starts after delay)
+    setTimeout(() => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(ripple4, {
+            toValue: 1,
+            duration: 2000,
+            useNativeDriver: true,
+            easing: Easing.out(Easing.ease),
+          }),
+          Animated.timing(ripple4, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }, 1500);
+  }, []);
+
   /* PROGRESS BAR ANIMATION */
   const startProgressAnimation = () => {
     // Reset progress
@@ -68,9 +153,9 @@ export default function DashboardScreen() {
     // Animate from 1 to 100
     Animated.timing(progressAnim, {
       toValue: 100,
-      duration: 2000, // 2 seconds for smooth animation
+      duration: 2000,
       useNativeDriver: false,
-       easing: Easing.linear,
+      easing: Easing.linear,
     }).start(({ finished }) => {
       if (finished) {
         setProgress(100);
@@ -125,29 +210,12 @@ export default function DashboardScreen() {
   };
 
   return (
-    <LinearGradient colors={["#020B2D", "#0B1D4D"]} style={{ flex: 1 }}>
+    <LinearGradient colors={["#000", "#0B1D4D"]} style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" backgroundColor="#020B2D" />
 
-      {/* HEADER */}
-      <View style={styles.topBar}>
-        <Ionicons name="home-outline" size={22} color="#fff" />
-        <Ionicons name="notifications-outline" size={22} color="#fff" />
-      </View>
-
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* USER INFO */}
-        <View style={styles.userRow}>
-          <Image
-            // source={{ uri: "https://i.pravatar.cc/100" }}
-            source={{ uri:user.avatar }}
-            style={styles.avatar}
-          />
-          <View>
-            <Text style={styles.smallText}>Hello There</Text>
-            <Text style={styles.name}>{user?.name || "User"}</Text>
-            <Text style={styles.smallText}>{user?.email}</Text>
-          </View>
-        </View>
+        {/* CUSTOM HEADER */}
+        <CustomHeader user={user} />
 
         {/* TIME */}
         <View style={styles.timeRow}>
@@ -170,20 +238,100 @@ export default function DashboardScreen() {
           })}
         </Text>
 
-        {/* FINGERPRINT */}
+        {/* FINGERPRINT WITH MULTIPLE RIPPLE EFFECTS */}
         <View style={{ alignItems: "center", marginVertical: 20 }}>
-          <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-            <TouchableOpacity
-              style={styles.fingerprint}
-              onPress={() => setShowPopup(true)}
-            >
-              <MaterialCommunityIcons
-                name="fingerprint"
-                size={50}
-                color="#fff"
-              />
-            </TouchableOpacity>
-          </Animated.View>
+          <View style={styles.fingerprintContainer}>
+            {/* Ripple 1 */}
+            <Animated.View 
+              style={[
+                styles.ripple,
+                {
+                  transform: [{
+                    scale: ripple1.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 1.8]
+                    })
+                  }],
+                  opacity: ripple1.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.7, 0]
+                  })
+                }
+              ]}
+            />
+            
+            {/* Ripple 2 */}
+            <Animated.View 
+              style={[
+                styles.ripple,
+                {
+                  transform: [{
+                    scale: ripple2.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 1.8]
+                    })
+                  }],
+                  opacity: ripple2.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.7, 0]
+                  })
+                }
+              ]}
+            />
+            
+            {/* Ripple 3 */}
+            <Animated.View 
+              style={[
+                styles.ripple,
+                {
+                  transform: [{
+                    scale: ripple3.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 1.8]
+                    })
+                  }],
+                  opacity: ripple3.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.7, 0]
+                  })
+                }
+              ]}
+            />
+            
+            {/* Ripple 4 */}
+            <Animated.View 
+              style={[
+                styles.ripple,
+                {
+                  transform: [{
+                    scale: ripple4.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 1.8]
+                    })
+                  }],
+                  opacity: ripple4.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.7, 0]
+                  })
+                }
+              ]}
+            />
+            
+            {/* Fingerprint Button */}
+            <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+              <TouchableOpacity
+                style={styles.fingerprint}
+                onPress={() => setShowPopup(true)}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons
+                  name="fingerprint"
+                  size={50}
+                  color="#fff"
+                />
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
           <Text style={styles.smallText}>Check In | Check Out</Text>
         </View>
 
@@ -208,7 +356,6 @@ export default function DashboardScreen() {
 
         <View style={styles.grid}>
           {overviewButtons.map((item, index) => (
-           // console.log(item.title),
             <TouchableOpacity
               key={index}
               style={styles.card}
@@ -217,6 +364,7 @@ export default function DashboardScreen() {
                 if (item.title === "Attendance") {navigation.navigate("AttendanceScreen", {token,user});}
                 if (item.title === "Holidays") {navigation.navigate("Holidays", {token,user});}
                 if (item.title === "Leave") {navigation.navigate("Leave", {token,user});}
+                if (item.title === "PaySlip") {navigation.navigate("PaySlip", {token,user});}
               }}
             >
               <MaterialCommunityIcons
@@ -225,9 +373,6 @@ export default function DashboardScreen() {
                 color="#fff"
               />
               <Text style={styles.cardTitle}>{item.title}</Text>
-              {/* <View style={styles.badge}>
-                <Text style={styles.badgeText}>{item.value}</Text>
-              </View> */}
             </TouchableOpacity>
           ))}
         </View>
@@ -253,16 +398,11 @@ export default function DashboardScreen() {
 /* OVERVIEW DATA */
 const overviewButtons = [
   { title: "Attendance", value: 12, icon: "fingerprint" },
-    // { title: "Present", value: 416, icon: "account-check" },
   { title: "Leave", value: 47, icon: "emoticon-sad" },
-  // { title: "Event", value: 0, icon: "calendar" },
-  // { title: "Projects", value: 2, icon: "briefcase" },
-  // { title: "Task", value: 1, icon: "flag" },
   { title: "Late", value: 3, icon: "clock-alert" },
-    { title: "PaySlip", value: 6, icon: "cash-multiple" },
+  { title: "PaySlip", value: 6, icon: "cash-multiple" },
   { title: "Overtime", value: 5, icon: "timer-plus" },
   { title: "Holidays", value: 8, icon: "beach" },
-
 ];
 
 /* STYLES */
@@ -284,7 +424,11 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     marginRight: 10,
   },
-  smallText: { color: "#ccc", fontSize: 11 },
+  smallText: { 
+    color: "#ccc", 
+    fontSize: 11,
+    marginTop: 8,
+  },
   name: { color: "#fff", fontSize: 15, fontWeight: "600" },
 
   timeRow: {
@@ -298,14 +442,30 @@ const styles = StyleSheet.create({
 
   date: { color: "#ccc", textAlign: "center", fontSize: 12 },
 
-  fingerprint: {
+  fingerprintContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  ripple: {
+    position: 'absolute',
     width: 110,
     height: 110,
+    borderRadius: 65,
+    backgroundColor: "#1E4E79",
+    borderWidth: 2,
+    
+  },
+
+  fingerprint: {
+    width: 100,
+    height: 100,
     borderRadius: 55,
     backgroundColor: "#1E4E79",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+
   },
 
   // Progress Container
@@ -325,7 +485,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   progressPercentage: {
-    color: "#1E90FF",
+    color: "#1E4E79",
     fontSize: 14,
     fontWeight: "bold",
   },
@@ -337,14 +497,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
-    progressText: {
+  progressText: {
     color: "#fff",
     fontSize: 13,
     textAlign: "center",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#1E90FF",
+    backgroundColor: "#1E4E79",
     borderRadius: 20,
     position: "absolute",
     left: 0,
@@ -367,6 +527,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "space-between",
     paddingHorizontal: 20,
+    paddingBottom: 30,
   },
   card: {
     width: (width - 60) / 2,

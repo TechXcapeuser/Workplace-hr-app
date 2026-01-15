@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import {
   View,
@@ -11,10 +11,13 @@ import {
   ActivityIndicator,
   SafeAreaView,
   StatusBar,
+  RefreshControl,
+  ScrollView, // Add ScrollView
 } from "react-native";
 import axios from "axios";
-import {API} from '../utils/api';
+import { API } from '../utils/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import CustomHeader from "./components/CustomHeader";
 
 const MONTHS = [
   { label: "January", value: 1 },
@@ -38,6 +41,7 @@ const AttendanceScreen = ({ navigation }) => {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [showMonthModal, setShowMonthModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [attendanceList, setAttendanceList] = useState([]);
   const [summary, setSummary] = useState(null);
@@ -67,12 +71,19 @@ const AttendanceScreen = ({ navigation }) => {
       console.log("Attendance API Error:", err.response?.data || err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     fetchAttendance();
   }, [month]);
+
+  /* ================= PULL TO REFRESH ================= */
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchAttendance();
+  }, []);
 
   /* ================= LIST ITEM ================= */
   const renderItem = ({ item }) => (
@@ -95,8 +106,24 @@ const AttendanceScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+     
       <StatusBar backgroundColor="#0b1530" barStyle="light-content" />
-      <View style={styles.container}>
+      
+      {/* WRAP ENTIRE CONTENT IN SCROLLVIEW WITH REFRESH CONTROL */}
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#64B5F6"]}
+            tintColor="#64B5F6"
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      > 
+      <CustomHeader user={user} />
         {/* ===== HEADER ===== */}
         <View style={styles.header}>
           <Text style={styles.title}>Attendance History</Text>
@@ -179,16 +206,17 @@ const AttendanceScreen = ({ navigation }) => {
         )}
 
         {/* ===== LIST ===== */}
-        {loading ? (
+        {loading && !refreshing ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#64B5F6" />
             <Text style={styles.loadingText}>Loading attendance data...</Text>
           </View>
-        ) : (
+        ) : attendanceList.length > 0 ? (
           <FlatList
             data={attendanceList}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderItem}
+            scrollEnabled={false} // Disable scrolling in nested FlatList
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContent}
             ListEmptyComponent={
@@ -199,55 +227,60 @@ const AttendanceScreen = ({ navigation }) => {
               </View>
             }
           />
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Icon name="event-busy" size={60} color="#546E7A" />
+            <Text style={styles.emptyText}>No attendance records found</Text>
+            <Text style={styles.emptySubText}>Select a different month</Text>
+          </View>
         )}
 
         {/* ===== MONTH MODAL (ORIGINAL WORKING DROPDOWN) ===== */}
         <Modal transparent visible={showMonthModal} animationType="fade">
-  <View style={styles.modalOverlay}>
-    
-    {/* Background click to close */}
-    <Pressable
-      style={StyleSheet.absoluteFill}
-      onPress={() => setShowMonthModal(false)}
-    />
+          <View style={styles.modalOverlay}>
+            {/* Background click to close */}
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              onPress={() => setShowMonthModal(false)}
+            />
 
-    {/* Modal content */}
-    <View style={styles.modal}>
-      <FlatList
-        data={MONTHS}
-        keyExtractor={(item) => item.value.toString()}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[
-              styles.monthItem,
-              item.value === month && styles.selectedMonthItem,
-            ]}
-            activeOpacity={0.7}
-            onPress={() => {
-              setMonth(item.value);
-              setShowMonthModal(false);
-            }}
-          >
-            <Text
-              style={[
-                styles.monthItemText,
-                item.value === month && styles.selectedMonthItemText,
-              ]}
-            >
-              {item.label}
-            </Text>
+            {/* Modal content */}
+            <View style={styles.modal}>
+              <FlatList
+                data={MONTHS}
+                keyExtractor={(item) => item.value.toString()}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.monthItem,
+                      item.value === month && styles.selectedMonthItem,
+                    ]}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setMonth(item.value);
+                      setShowMonthModal(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.monthItemText,
+                        item.value === month && styles.selectedMonthItemText,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
 
-            {item.value === month && (
-              <Icon name="check" size={18} color="#4CAF50" />
-            )}
-          </TouchableOpacity>
-        )}
-      />
-    </View>
-  </View>
-</Modal>
-      </View>
+                    {item.value === month && (
+                      <Icon name="check" size={18} color="#4CAF50" />
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </View>
+        </Modal>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -263,8 +296,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#0b1530",
+  },
+  scrollContent: {
     padding: 16,
     paddingTop: 20,
+    paddingBottom: 30, // Add bottom padding
   },
   header: {
     flexDirection: "row",
@@ -298,7 +334,7 @@ const styles = StyleSheet.create({
   },
   // Today Card Styles
   todayCard: {
-    backgroundColor: "rgba(22, 45, 76, 1)",
+    backgroundColor: "rgb(0, 0, 0)",
     borderRadius: 14,
     marginBottom: 20,
     overflow: 'hidden',
@@ -312,12 +348,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: 'rgba(100, 181, 246, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   todayCardTitle: {
-    color: "#64B5F6",
+    color: "#ffffff",
     fontSize: 16,
     fontWeight: "600",
     marginLeft: 10,
@@ -353,7 +389,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   card: {
-    backgroundColor: "#1E3A5F",
+    backgroundColor: "#000000",
     width: "48%",
     borderRadius: 16,
     padding: 18,
@@ -388,7 +424,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
-    backgroundColor: "rgba(22, 45, 76, 1)",
+    backgroundColor: "rgb(0, 0, 0)",
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 12,
@@ -440,9 +476,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   loadingContainer: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    minHeight: 200,
   },
   loadingText: {
     color: "#B0BEC5",
@@ -451,10 +487,10 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   emptyContainer: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 60,
+    minHeight: 200,
+    marginTop: 20,
   },
   emptyText: {
     color: "#B0BEC5",
@@ -468,6 +504,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   listContent: {
-    paddingBottom: 30,
+    paddingBottom: 10,
   },
 });
